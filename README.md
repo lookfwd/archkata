@@ -1,48 +1,48 @@
 # Farmacy Food Architecture
 
+## Table of Contents
 ```
-Farmacy Food Architecture	1
-I. Overview	2
-II. Vision	2
-III. Goals and Opportunities	2
-Business Immediate Goals	2
-Business Long Term Goals	2
-Business Opportunity	3
-Competitors	3
-IV. Use Cases	3
-Customer Journey	3
-Case 1. Customer orders via PoS	4
-Case 2. Customer orders online	4
-Maintenance and Failure Operations	6
-V. Requirements	6
-Prioritized Architecture Characteristics	6
-1. Viability	6
-2. Availability	7
-3. Security	7
-4. Extensibility	7
-5. Scalability	7
-6. Performance	7
-Design Constraints	7
-VI. High-Level Design	8
-Key Development Areas	9
-Web/Mobile Experience	9
-Scheduling System	9
-The Missing Data Tier	9
-VII. Milestones	10
-Milestone 1. Marketing and Analytics	10
-Milestone 2. Mobile App Menu	11
-Milestone 3. Mobile App Orders	11
-Milestone 4. Web Orders	11
-Milestone 5. Customer Profiles	11
-Milestone 6. Multi-Location and Scaling Delivery	11
-VIII. ADRs	11
-ADR 1. Hosting Platform	11
-ADR 2. Mobile App Platform	12
-ADR 3. Serverless	12
-ADR 4. Online payment Processing System	12
-ADR 5. Web and Mobile Analytics	13
-ADR 6. Routing and scheduling Software	13
-ADR 7. Newsletters and Client Communication	14
+I. Overview
+II. Vision
+III. Goals and Opportunities
+  Business Immediate Goals
+  Business Long Term Goals
+  Business Opportunity
+  Competitors
+IV. Use Cases
+  Customer Journey
+  Case 1. Customer orders via PoS
+  Case 2. Customer orders online
+  Maintenance and Failure Operations
+V. Requirements
+  Prioritized Architecture Characteristics
+    1. Viability
+    2. Availability
+    3. Security
+    4. Extensibility
+    5. Scalability
+    6. Performance
+  Design Constraints
+VI. High-Level Architecture
+  Key Development Areas
+  Web/Mobile Experience
+  Scheduling System
+  The Missing Data Tier
+VII. Milestones
+  Milestone 1. Marketing and Analytics
+  Milestone 2. Mobile App Menu
+  Milestone 3. Mobile App Orders
+  Milestone 4. Web Orders
+  Milestone 5. Customer Profiles
+  Milestone 6. Multi-Location and Scaling Delivery
+VIII. ADRs
+  ADR 1. Hosting Platform
+  ADR 2. Mobile App Platform
+  ADR 3. Serverless
+  ADR 4. Online payment Processing System
+  ADR 5. Web and Mobile Analytics
+  ADR 6. Routing and scheduling Software
+  ADR 7. Newsletters and Client Communication
 ```
 
 ## I. Overview
@@ -101,66 +101,71 @@ The following customer, and delivery interactions might happen either via web or
 
 ![](images/order-process.png)
 
-Case 1. Customer orders via PoS
-The customer visits the point of sales
-The customer picks a meal from the fridge
-The PoS owner charges customer’s card and prints an invoice
-The PoS informs the scheduling system for the reduction of stock
-The scheduling system triggers a replenish order if the stock is low
-The PoS informs the accounting system on the sale
-Case 2. Customer orders online 
+### Case 1. Customer orders via PoS
 
-The customer must set-up an account (Including social sign-in Facebook, Gmail, etc.)
-The customer must be logged in
-The customer must set dietary preferences and set health goals
-The customer must be shown available delivery options near an area of their choice (e.g. home or work). The delivery options are  home delivery (small delivery fee) and collection from a smart fridge (free). Both are subject to availability in supported locations
-The customer must choose a delivery method
-The customer must be shown time-options for delivery or pick-up. This could be either ASAP where a time must be provided subject to centralized kitchen and delivery‘s availability, or scheduled, where the customer can be offered more flexibility for a later time
-The customer searches for available meals compatible with his preferences and available on the given timeframe
-The customer adds meals to his basket
-The customer must have sufficient credit, or a coupon
-The customer must be able to purchase their credit if necessary
-The customer must be able to confirm discount eligibility during the purchase
-The customer must be presented and order summary and confirm the order
-A confirmation SMS is sent to the customer
-An invoice is sent by email to the customer, via the accounting system
-The order is scheduled by the scheduling system
-The scheduling system informs the stock controller system for the order and the timeframe
-The stock controller system will issue purchase orders if the stock of any ingredients is low
-The stock controller informs the accounting system of the purchase to update the P&L
-The scheduling system informs the delivery system for the order and the timeframe
-The dish or its ingredients aren’t relevant at this stage. Metadata about the order (e.g. cold or warm dish) is sent to the delivery system
-The delivery system schedules delivery and returns a tracking identifier and a container identifier
-At the appropriate time, the order is presented to the centralized kitchen
-The meal is prepared using the ingredients by the centralized kitchen
-The meal is marked as ready on the centralized kitchen dashboard
-The meal is placed on the appropriate container by the centralized kitchen
-The delivery picks the container and travels to the specified location
-In case it’s home delivery
-The delivery gives the customer the order and marks the order as complete by scanning the QR code
-The customer receives a confirmation SMS
-In case of smart fridge delivery
-The delivery replenishes the smart fridge placing orders on the designated cells
-The delivery marks the order as complete by scanning the QR code. The customer receives a notification SMS to pick-up their order
-The customer swipes a credit or debit card they’ve registered in the app, on the back-end of the smart fridge 
-The smart fridge releases the order
-The customer receives a confirmation SMS.
-After a specified interval (a day) the customer is sent a feedback email
-Engage the customer by pushing marketing and health education messages
-Maintenance and Failure Operations
-Emergency Stock. The stock controller must ensure there’s always enough safety stock to support the kitchen.
-Clean the smart fridges. Leftover orders must be returned by the smart fridge operator (e.g. coffee shop). The delivery must be notified via a web/mobile form to pick those up
-Accidents e.g. spills on the fridge must be reported by the smart fridge operator via a web/mobile form. Power outages must be monitored and when prolonged, the food/orders should be considered expired.
-The customer might not receive an order. In case of home delivery, this might happen because the delivery was late or unavailable or any other reason. The customer must be able to dispute the order and get a refund. In case of smart fridge delivery this might happen either due to delivery problems (same as before) or because the fridge is jammed, non-operational, there’s a power outage or the operator is unavailable (e.g. store is closed), Aggregate stats must be collected in both cases and reported to the management.
-The customer might complain about the quality of the order such as meal quality, temperature, quality of cooking, delivery etc. The management is required to follow up in those cases with the goal to retain the customer and improve the process.
-The kitchen might run out of stock or lag behind or be unable to deliver on time for any other reasons. Detailed metrics must be collected and communicated to the management in real time. The management can decide to issue a refund or take other actions to mitigate the issue.
-The stock controller might be unable to purchase ingredients on a price that gives acceptable margin. It must notify the management in order to monitor the situation and take actions such as mark meals as unavailable or provide alternative ingredients.
+* The customer visits the point of sales
+* The customer picks a meal from the fridge
+* The PoS owner charges customer’s card and prints an invoice
+* The PoS informs the scheduling system for the reduction of stock
+* The scheduling system triggers a replenish order if the stock is low
+* The PoS informs the accounting system on the sale
+
+### Case 2. Customer orders online 
+
+* The customer must set-up an account (Including social sign-in Facebook, Gmail, etc.)
+* The customer must be logged in
+* The customer must set dietary preferences and set health goals
+* The customer must be shown available delivery options near an area of their choice (e.g. home or work). The delivery options are  home delivery (small delivery fee) and collection from a smart fridge (free). Both are subject to availability in supported locations
+* The customer must choose a delivery method
+* The customer must be shown time-options for delivery or pick-up. This could be either ASAP where a time must be provided subject to centralized kitchen and delivery‘s availability, or scheduled, where the customer can be offered more flexibility for a later time
+* The customer searches for available meals compatible with his preferences and available on the given timeframe
+* The customer adds meals to his basket
+* The customer must have sufficient credit, or a coupon
+* The customer must be able to purchase their credit if necessary
+* The customer must be able to confirm discount eligibility during the purchase
+* The customer must be presented and order summary and confirm the order
+* A confirmation SMS is sent to the customer
+* An invoice is sent by email to the customer, via the accounting system
+* The order is scheduled by the scheduling system
+* The scheduling system informs the stock controller system for the order and the timeframe
+* The stock controller system will issue purchase orders if the stock of any ingredients is low
+* The stock controller informs the accounting system of the purchase to update the P&L
+* The scheduling system informs the delivery system for the order and the timeframe
+* The dish or its ingredients aren’t relevant at this stage. Metadata about the order (e.g. cold or warm dish) is sent to the delivery system
+* The delivery system schedules delivery and returns a tracking identifier and a container identifier
+* At the appropriate time, the order is presented to the centralized kitchen
+* The meal is prepared using the ingredients by the centralized kitchen
+* The meal is marked as ready on the centralized kitchen dashboard
+* The meal is placed on the appropriate container by the centralized kitchen
+* The delivery picks the container and travels to the specified location
+* In case it’s home delivery
+  * The delivery gives the customer the order and marks the order as complete by scanning the QR code
+  * The customer receives a confirmation SMS
+* In case of smart fridge delivery
+  * The delivery replenishes the smart fridge placing orders on the designated cells
+  * The delivery marks the order as complete by scanning the QR code. The customer receives a notification SMS to pick-up their order
+  * The customer swipes a credit or debit card they’ve registered in the app, on the back-end of the smart fridge 
+  * The smart fridge releases the order
+  * The customer receives a confirmation SMS.
+* After a specified interval (a day) the customer is sent a feedback email
+* Engage the customer by pushing marketing and health education messages
+
+### Maintenance and Failure Operations
+
+* Emergency Stock. The stock controller must ensure there’s always enough safety stock to support the kitchen.
+* Clean the smart fridges. Leftover orders must be returned by the smart fridge operator (e.g. coffee shop). The delivery must be notified via a web/mobile form to pick those up
+* Accidents e.g. spills on the fridge must be reported by the smart fridge operator via a web/mobile form. Power outages must be monitored and when prolonged, the food/orders should be considered expired.
+* The customer might not receive an order. In case of home delivery, this might happen because the delivery was late or unavailable or any other reason. The customer must be able to dispute the order and get a refund. In case of smart fridge delivery this might happen either due to delivery problems (same as before) or because the fridge is jammed, non-operational, there’s a power outage or the operator is unavailable (e.g. store is closed), Aggregate stats must be collected in both cases and reported to the management.
+* The customer might complain about the quality of the order such as meal quality, temperature, quality of cooking, delivery etc. The management is required to follow up in those cases with the goal to retain the customer and improve the process.
+* The kitchen might run out of stock or lag behind or be unable to deliver on time for any other reasons. Detailed metrics must be collected and communicated to the management in real time. The management can decide to issue a refund or take other actions to mitigate the issue.
+* The stock controller might be unable to purchase ingredients on a price that gives acceptable margin. It must notify the management in order to monitor the situation and take actions such as mark meals as unavailable or provide alternative ingredients.
 
 ## V. Requirements
 
 The architecture must support the use cases described above while satisfying the requirements listed in this section.
 
 ### Prioritized Architecture Characteristics
+
 #### 1. Viability
 The startup must be able to implement the architecture given budget and time constraints. More specifically this is framed as an integration project where solutions from Software as a Service (SaaS) vendors are integrated using minimal software development. The architecture must be able to be built by delivering features that address the most immediate growth pain points of the business. Complex features that require custom software development must be postponed to as late as possible. 
 #### 2. Availability
@@ -225,34 +230,34 @@ Key takeaways:
 ## VII. Milestones
 
 ### Milestone 1. Marketing and Analytics
-The existing Web and Mobile apps will be enhanced with Google Analytics
-The Web and Mobile apps will be collecting emails of leads and customers
-Any existing e-mails will be migrated to MailChimp
-Education on healthy eating newsletters will engage the customers. Their performance will be evaluated with Analytics
-Glue logic Cloud Function will be developed that keeps MailChimp user database in-sync with the Web App.
+* The existing Web and Mobile apps will be enhanced with Google Analytics
+* The Web and Mobile apps will be collecting emails of leads and customers
+* Any existing e-mails will be migrated to MailChimp
+* Education on healthy eating newsletters will engage the customers. Their performance will be evaluated with Analytics
+* Glue logic Cloud Function will be developed that keeps MailChimp user database in-sync with the Web App.
 
 ### Milestone 2. Mobile App Menu
-The existing Mobile app will be enhanced to show the menu with information of availability based on the kitchen and the location.
+* The existing Mobile app will be enhanced to show the menu with information of availability based on the kitchen and the location.
 
 ### Milestone 3. Mobile App Orders
-Customers are able to login (Firebase takes care of social login) and build basic profiles
-Customers can add credit by using the Stripe integration
-Customers can place orders of meals via their mobile app
-Orders are scheduled using ChefTec
-Smart fridges are forwarded sufficient information to release meals in a secure manner (hashes of credit card numbers)
+* Customers are able to login (Firebase takes care of social login) and build basic profiles
+* Customers can add credit by using the Stripe integration
+* Customers can place orders of meals via their mobile app
+* Orders are scheduled using ChefTec
+* Smart fridges are forwarded sufficient information to release meals in a secure manner (hashes of credit card numbers)
 
 ### Milestone 4. Web Orders
-The website is enhanced to be on-parity with the mobile app
+* The website is enhanced to be on-parity with the mobile app
 
 ### Milestone 5. Customer Profiles
-The customers can build rich profiles through the web and mobile apps
-The available and recommended meals will be customized based on their profiles
-The customers can track records based on meals e.g. calories avoided compared to traditional dining
+* The customers can build rich profiles through the web and mobile apps
+* The available and recommended meals will be customized based on their profiles
+* The customers can track records based on meals e.g. calories avoided compared to traditional dining
 
 ### Milestone 6. Multi-Location and Scaling Delivery
-The web and mobile apps are enhanced to support multiple cities
-Otter delivery is integrated to enable enhanced delivery scheduling from the centralized kitchen
-Multiple local kitchens on a trial-basis are supported
+* The web and mobile apps are enhanced to support multiple cities
+* Otter delivery is integrated to enable enhanced delivery scheduling from the centralized kitchen
+* Multiple local kitchens on a trial-basis are supported
 
 ## VIII. ADRs
 #### ADR 1. Hosting Platform
