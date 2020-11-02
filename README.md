@@ -99,7 +99,7 @@ These interactions happen after successful acquisition of a customer. Customer a
 
 The following customer, and delivery interactions might happen either via web or mobile app. SMS interactions might be supported in the future.
 
-![](images/Order Process.png)
+![](images/Order-Process.png)
 
 Case 1. Customer orders via PoS
 The customer visits the point of sales
@@ -186,7 +186,7 @@ ChefTec doesn’t have any public available information about their API. They in
 
 Directly out of the basic listing of the requirements, and by taking the ADRs into account, this high-level diagram can provide all the necessary use cases.
 
-![](images/High-Level Components.png)
+![](images/High-Level-Components.png)
 
 The architecture is obviously very customer-centric. The customer interacts with Farmacy Food through well designed touch-points. Those are:
 
