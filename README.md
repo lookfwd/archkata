@@ -99,7 +99,7 @@ These interactions happen after successful acquisition of a customer. Customer a
 
 The following customer, and delivery interactions might happen either via web or mobile app. SMS interactions might be supported in the future.
 
-![](images/Order-Process.png)
+![](images/order-process.png)
 
 Case 1. Customer orders via PoS
 The customer visits the point of sales
