@@ -185,7 +185,11 @@ Customer interactions must be timely to provide a smooth customer experience. Th
 * [Intuit QuickBooks](https://quickbooks.intuit.com/) is used for accounting
 * There’s an existing mobile application
 
-ChefTec doesn’t have any public available information about their API. They integrate with QuickBooks for invoicing through add-ons. Toast has an API that one can access after accepting their “API Documentation License Agreement”, [here](https://dev.toasttab.com/Ie5QH/apiOverview.html). QuickBooks has an elaborate [API](https://developer.intuit.com/app/developer/qbo/docs/develop) and SDKs.
+ChefTec doesn’t have any public available information about their API. Given that most of their off-the-shelf solutions cost in the order of serveral thousand dollars, its [consultancy services](https://www.cheftec.com/consultancy) is unlikely to be cheap. This is a significant risk given how important the central kitchen is for Farmacy Food. ChefTec integrates with QuickBooks for invoicing through add-ons for extra cost.
+
+Toast has an API that one can access after accepting their “API Documentation License Agreement”, [here](https://dev.toasttab.com/Ie5QH/apiOverview.html).
+
+QuickBooks has an elaborate [API](https://developer.intuit.com/app/developer/qbo/docs/develop) and SDKs.
 
 ## VI. High-Level Architecture
 
@@ -193,17 +197,16 @@ Directly out of the basic listing of the requirements, and by taking the ADRs in
 
 ![](images/High-Level-Components.png)
 
-The architecture is obviously very customer-centric. The customer interacts with Farmacy Food through well designed touch-points. Those are:
+The architecture is obviously very customer-centric. The customer interacts with Farmacy Food through well designed touch-points. Those are the:
 
 * Cross-platform web and mobile apps
-* The smart fridge
 * Point of Sales Devices on stores
 * Smart Fridges also on stores
 * Web Campaigns that educate and engage
 
-The kitchen is already familiar and satisfied with their ChefTec solution. As long as an API integration solution is found, ChefTec can integrate with the rest of the system. Otherwise Import/export and manual operations will be required. In that case, as the startup scales, it’s likely that this will become a friction point that will make ChefTec obsolete.
+The kitchen is already familiar and satisfied with their ChefTec solution. As long as an API integration solution is found, ChefTec can integrate with the rest of the system. Their [backup mechanism](https://www.cheftec.com/backup) can be another way to export data. If these don't work, import/export and manual operations will be required. As the startup scales, it’s likely that this will become a friction point that will make Farmacy Food investigate ChefTec alternatives.
 
-Management Oversees operations with emphasis on Marketing and Analytics. This is to be expected for a startup in growth mode. On the other hand, back-end operations are automated to a great extent and don’t require management involvement.
+Management oversees operations with emphasis on Marketing and Analytics. This is to be expected for a startup in growth mode. On the other hand, back-end operations are automated to a great extent and don’t require management involvement.
 
 QuickBooks takes care of accounting and payroll. It is integrated with ChefTec and the Toast PoS. The online payments must also be integrated with QuickBooks by using the [relevant app](https://quickbooks.intuit.com/app/apps/appdetails/?shortName=stripe&).
 
@@ -212,12 +215,23 @@ QuickBooks takes care of accounting and payroll. It is integrated with ChefTec a
 This Architecture uses SaaS vendors for most of the mundane aspects of the system. This allows the development team to focus on developing the differentiating factors of Farmacy Food. Those are:
 
 #### Web/Mobile Experience
-The web/mobile experience is the most important differentiating factor of the brand. This allows the customers to order online according to their dietary and health requirements. Once again, by using React Native and Firebase, we avoid spending development time on mundane tasks like login and cross-platform mobile development. The development team can focus on the development of value-adding forms and seamless UX. On the back-end the serverless choice of Cloud Functions means that the team won’t have to worry about building, securing and maintaining servers.
+
+The web/mobile experience is the most important differentiating factor of the brand. This allows the customers to order online according to their dietary and health requirements. By using React Native and Firebase, we avoid spending development time on mundane tasks like login and cross-platform mobile development. The development team can focus on the development of value-adding online functionality and seamless UX.
+
+![](images/mobile-mock.png)
+
+On the back-end the serverless choice of Cloud Functions means that the team won’t have to worry about building, securing and maintaining servers [[1](https://cloud.google.com/blog/products/serverless/how-gannett-built-a-serverless-app), [2](https://itnext.io/building-a-serverless-restful-api-with-cloud-functions-firestore-and-express-f917a305d4e6)].
+
+![](images/gcp-hosting.png)
+
+[The `nam5` Multi-Regional location](https://firebase.google.com/docs/projects/locations) will be used to allow redundancy of critical data and high availability. Replication is handled by Firebase. For the storage and data synchronization needs of the application the [Realtime Database](https://firebase.google.com/docs/database) will be used based on the [best practices for Farmacy Food's needs](https://firebase.google.com/docs/database/rtdb-vs-firestore).
 
 #### Scheduling System
+
 The Scheduling System is a central point where we collect all the (potentially complex) business logic for dispatching and scheduling orders. As described in the use cases, there are complex questions like meal availability that require input from the scheduling system. The options available to a customer for a given time-window can be limited by the availability of delivery or the kitchen and ingredients. The complex logic that is able to answer those questions is included in the Scheduling System. The same system manages order-dispatch from the Web/Mobile UIs to ChefTec and Otter for delivery. This system is responsible with using the APIs of the SaaS platforms to gather information and coordinate their operation.
 
 #### The Missing Data Tier
+
 In a traditional 3-Tier Architecture we would have presentation, application and data tiers. In Farmacy Food Architecture, the presentation tier consists of Firebase and the web apps. The application tier is mostly the scheduling system. The data tier seems to be missing though. The fact is that state is stored in various places on the SaaS platforms like Toast and ChefTec. Their APIs must be able to provide the data we need in a timely manner. Remember that our user interactions require sub-second responses. There will be cases where APIs will be missing and/or will be slow. In these cases explicit data storage will be required. Duplicate state inevitably will be out of sync. This means that consolidation operations will be required (see [Saga distributed transactions](https://docs.microsoft.com/en-us/azure/architecture/reference-architectures/saga/saga)). This will increase the complexity of the system and as such, it must be delayed as long as possible. A level of redundancy to business acceptable levels can be employed. For example 5% more meals can be prepared in order to offset mistakes from out-of sync state. Inevitably some customer interactions will be less than perfect because of that. State synchronization errors will manifest as errors on API calls. Alarm and monitoring provided by the GCP must be set-up properly to allow the developers and management to assess the types of errors that occur. All these problems will start happening at a certain level of traffic. We can delay spending development time addressing those issues unless there’s a certain level of success.
 
 Key takeaways:
@@ -265,7 +279,7 @@ Key takeaways:
 Status: proposed
 Context: The architecture needs to be hosted either on dedicated servers or in the cloud. The choice of cloud provider affects the cost of the solution and the time of the implementation.
 Decision: The platform of choice is the [Google Cloud Platform](https://cloud.google.com/) (GCP) on the basis of ease of development, security, versatility and price. To avoid vendor lock-in, no components that don’t have an AWS-equivalent should be used without explicit permission.
-Consequences: The implementation is expected to scale elastically on demand. We can run experiments and develop staging and test environments easily. AWS remains a migration option if factors like host dictate it at some point.
+Consequences: The implementation is expected to scale elastically on demand. We can run experiments and develop staging and test environments easily. AWS remains a migration option if factors like host dictate it at some point. Notably, Google App Engine and BigQuery can _not_ be used because of vendor lock-in concerns.
 
 #### ADR 2. Mobile App Platform
 * Status: Proposed
