@@ -1,4 +1,5 @@
 # Farmacy Food Architecture
+by ![jiakaturi](images/jiakaturi.png)
 
 ## Table of Contents
 ```
@@ -16,26 +17,31 @@ IV. Use Cases
   Maintenance and Failure Operations
 V. Requirements
   Prioritized Architecture Characteristics
-    1. Viability
-    2. Availability
-    3. Security
-    4. Extensibility
-    5. Scalability
-    6. Performance
+    1. Enable Discovery - Agility
+    2. Affordable DevSecOps - Viability
+    3. Easy to Pivot - Flexibility
+    4. Availability
+    5. Security
+    6. Scalability
+    7. Performance
   Design Constraints
 VI. High-Level Architecture
-  Key Development Areas
   Web/Mobile Experience
+  Offline Strategy for Smart Fridges
+VII. Selected Topics of Mid-Level Architecture
   Scheduling System
   The Missing Data Tier
-VII. Milestones
+  How we Avoid Firebase Lock-in 
+  Lean on Data
+  ChefTec Integration
+VIII. Milestones
   Milestone 1. Marketing and Analytics
   Milestone 2. Mobile App Menu
   Milestone 3. Mobile App Orders
   Milestone 4. Web Orders
   Milestone 5. Customer Profiles
   Milestone 6. Multi-Location and Scaling Delivery
-VIII. ADRs
+IX. ADRs
   ADR 1. Hosting Platform
   ADR 2. Mobile App Platform
   ADR 3. Serverless
@@ -43,9 +49,12 @@ VIII. ADRs
   ADR 5. Web and Mobile Analytics
   ADR 6. Routing and scheduling Software
   ADR 7. Newsletters and Client Communication
+  ADR 8. Smart Fridge Access will be Controlled Both on Prem and via CDN
+  ADR 9. Google Firebase will be used as Presentation Layer
 ```
 
 ## I. Overview
+
 
 Farmacy Food is a healthy food startup that takes the “let food be thy medicine” quote literally. This document describes high-level architecture of Farmacy Food’s cloud-based IT infrastructure. It provides essential context followed by a list of key requirements, captured during interviews and research on the startup. A high-level architecture that satisfies those requirements is presented. The document concludes with a project breakdown in delivery milestones. This is a living document and is constantly being updated to reflect changes as the architecture evolves.
 
@@ -91,7 +100,13 @@ Any food and beverage-based or restaurant-based business is a competitor. Direct
 
 ## IV. Use Cases
 
-In order to understand the main requirements we have to follow an order from the customer till the meal reaches their door.
+In order to understand the main requirements [we created an advertisment](https://youtu.be/anJS18czECE?t=42). You can watch it [here](https://youtu.be/anJS18czECE?t=42).
+
+[![watch ad](images/the-ad.png)](https://youtu.be/anJS18czECE?t=42)
+
+It's quite clear that the main two touch points that will make or break Farmacy Food's business is the mobile app/website and the interaction with the Smart Fridge.
+
+We mapped out the entire customer journey from the order till it's ready on their hands.
 
 ### Customer Journey
 
@@ -165,18 +180,19 @@ The following _customer_, and _delivery_ interactions might happen either via we
 The architecture must support the use cases described above while satisfying the requirements listed in this section.
 
 ### Prioritized Architecture Characteristics
-
-#### 1. Viability
+#### 1. Enable Discovery - Agility
+The customer experience in acquisition channels (mobile, web and even SMS) must be seamless. This requires custom experimentation and optimization. The architecture must provide ways to capture customer behaviour with comprehensive analytics and support A/B testing. It's a plus if it can also provide rich experiences like smart recommendations powered by AI/Machine Learning. Those features must be immediatelly available on pay-as-you go basis, instead of requiring significant upfront investments in development or technology.
+#### 2. Affordable DevSecOps - Viability
 The startup must be able to implement the architecture given budget and time constraints. More specifically this is framed as an integration project where solutions from Software as a Service (SaaS) vendors are integrated using minimal software development. The architecture must be able to be built by delivering features that address the most immediate growth pain points of the business. Complex features that require custom software development must be postponed to as late as possible. 
-#### 2. Availability
-This is a business critical system and this reflects on the Service-Level Objectives (SLOs). The system must be available during core business hours and the website has to be continuously available with the exception of small (up to 2 hours) maintenance windows during low traffic times.
-#### 3. Security
-The design must be secure to protect the brand. To have both high security and low costs we must limit the attack surface and avoid holding consumer and sensitive data. Data to be considered include credit card numbers, dates of birth, addresses and emails. Health data is sensitive data and should also be carefully considered. Consulting should be used to ensure compliance with regulatory requirements e.g. PCI for credit cards or HIPAA for health data. The SaaS vendors must also be reputable and provide security assurances.
-#### 4. Extensibility
+#### 3. Easy to Pivot - Flexibility
 The design must be able to grow as the startup grows. It’s expected that Farmacy Food will pivot several times as it grows. Pivoting should be driven by business needs and not be influenced by rigid architecture structures. In particular architectures that require heavy upfront investment in hardware or software or long-term licencing should be avoided if possible. Careful documentation of processes, requirements and architectural decisions, must make a complete rewrite of every software component, a viable option.
-#### 5. Scalability
+#### 4. Availability
+This is a business critical system and this reflects on the Service-Level Objectives (SLOs). The system must be available during core business hours and the website has to be continuously available with the exception of small (up to 2 hours) maintenance windows during low traffic times.
+#### 5. Security
+The design must be secure to protect the brand. To have both high security and low costs we must limit the attack surface and avoid holding consumer and sensitive data. Data to be considered include credit card numbers, dates of birth, addresses and emails. Health data is sensitive data and should also be carefully considered. Consulting should be used to ensure compliance with regulatory requirements e.g. PCI for credit cards or HIPAA for health data. The SaaS vendors must also be reputable and provide security assurances.
+#### 6. Scalability
 Scalability requirements are moderate. The architecture needs to be able to support 1000s  of users. This is a subsequent requirement for all our SaaS vendors. They should provide assurances of scale and explain how they monitor and stress test their infrastructure. 
-#### 6. Performance
+#### 7. Performance
 Customer interactions must be timely to provide a smooth customer experience. This means less than a second for most operations. In exceptional cases where more time is indeed a progress indicator and other interactive components must be used to provide a smooth User Experience (UX). All other (non-customer) interactions should be responsive enough to support operations, but it’s acceptable to be less responsive than the user interactions.
 
 ### Design Constraints
@@ -197,11 +213,11 @@ Directly out of the basic listing of the requirements, and by taking the ADRs in
 
 ![](images/High-Level-Components.png)
 
-The architecture is obviously very customer-centric. The customer interacts with Farmacy Food through well designed touch-points. Those are the:
+This is a customer-centric architecture. The customer interacts with Farmacy Food through well designed touch-points. Those are the:
 
 * Cross-platform web and mobile apps
-* Point of Sales Devices on stores
 * Smart Fridges also on stores
+* Point of Sales Devices on stores
 * Web Campaigns that educate and engage
 
 The kitchen is already familiar and satisfied with their ChefTec solution. As long as an API integration solution is found, ChefTec can integrate with the rest of the system. Their [backup mechanism](https://www.cheftec.com/backup) can be another way to export data. If these don't work, import/export and manual operations will be required. As the startup scales, it’s likely that this will become a friction point that will make Farmacy Food investigate ChefTec alternatives.
@@ -210,13 +226,15 @@ Management oversees operations with emphasis on Marketing and Analytics. This is
 
 QuickBooks takes care of accounting and payroll. It is integrated with ChefTec and the Toast PoS. The online payments must also be integrated with QuickBooks by using the [relevant app](https://quickbooks.intuit.com/app/apps/appdetails/?shortName=stripe&).
 
-### Key Development Areas
-
 This Architecture uses SaaS vendors for most of the mundane aspects of the system. This allows the development team to focus on developing the differentiating factors of Farmacy Food. Those are:
 
 #### Web/Mobile Experience
 
-The web/mobile experience is the most important differentiating factor of the brand. This allows the customers to order online according to their dietary and health requirements. By using React Native and Firebase, we avoid spending development time on mundane tasks like login and cross-platform mobile development. The development team can focus on the development of value-adding online functionality and seamless UX.
+The web/mobile experience is the most important differentiating factor of the brand. This allows the customers to order online according to their dietary and health requirements.
+
+![](images/web-app.png)
+
+By using React Native and Firebase, we avoid spending development time on mundane tasks like login and cross-platform mobile development. The development team can focus on the development of value-adding online functionality and seamless UX.
 
 ![](images/mobile-mock.png)
 
@@ -226,26 +244,68 @@ On the back-end the serverless choice of Cloud Functions means that the team won
 
 [The `nam5` Multi-Regional location](https://firebase.google.com/docs/projects/locations) will be used to allow redundancy of critical data and high availability. Replication is handled by Firebase. For the storage and data synchronization needs of the application the [Realtime Database](https://firebase.google.com/docs/database) will be used based on the [best practices for Farmacy Food's needs](https://firebase.google.com/docs/database/rtdb-vs-firestore).
 
-#### Scheduling System
+#### Offline Strategy for Smart Fridges
+
+The second key touch point with Farmacy Food customers is the Smart Fridge.
+
+![](images/smart-fridge.png)
+
+We want to create a decentralized architecture that is robust. It can deliver the products in the smart fridge even with no internet connectivity.
+
+The Smart Fridge is controlled in two ways. The first one is via the toast POS. This has already been proven reliable and it works. The second one is via our oneline order management system.
+
+![](images/SmartFridge.png)
+
+In order to make this second part decentralized and highly available, we will deliver all orders a fridge is expected to fulfil for a given day in files, that are backed by a CDN. By using a CDN, a very low cost solution, we know that there will be availability at the edge, even if our main systems aren't available or are under maintainance. The files will be fetched periodically by the Smart Fridges and the most current version of the file will be used to allow the firdge to unlock a specific meal.
+
+The lock of the Smart fridge, releases the meal, when the customer presents their credit card. This means that the file must contain a number of hashes of subsets of digits of the credit card's number. The filename can be used as a nonce to partially mitigate dictionary attacks. Date and CVV's will _not_ be in the file. Note also that the above hashing scheme maps the set of hashes to many different cards. This way, even with brute-force attacks, the credit numbers won't be revealed. Worst case, someone might steal a meal, but the computer power required to break the hashing scheme will likely be more expensive than buying the meal in the first place. The container of the meal to be released will also be contained in the file.
+
+The firdge will keep track of which meals have been released. This information must be retained locally and be robust to power loss. Even if the fridge manages to connect only once a day, it is able to fetch the orders for the next day and update the central infrastructure on its status, including the meals it released.
+
+
+## VII. Selected Topics of Mid-Level Architecture
+
+### Scheduling System
 
 The Scheduling System is a central point where we collect all the (potentially complex) business logic for dispatching and scheduling orders. As described in the use cases, there are complex questions like meal availability that require input from the scheduling system. The options available to a customer for a given time-window can be limited by the availability of delivery or the kitchen and ingredients. The complex logic that is able to answer those questions is included in the Scheduling System. The same system manages order-dispatch from the Web/Mobile UIs to ChefTec and Otter for delivery. This system is responsible with using the APIs of the SaaS platforms to gather information and coordinate their operation.
 
-#### The Missing Data Tier
+### How we Avoid Firebase Lock-in 
 
-In a traditional 3-Tier Architecture we would have presentation, application and data tiers. In Farmacy Food Architecture, the presentation tier consists of Firebase and the web apps. The application tier is mostly the scheduling system. The data tier seems to be missing though. The fact is that state is stored in various places on the SaaS platforms like Toast and ChefTec. Their APIs must be able to provide the data we need in a timely manner. Remember that our user interactions require sub-second responses. There will be cases where APIs will be missing and/or will be slow. In these cases explicit data storage will be required. Duplicate state inevitably will be out of sync. This means that consolidation operations will be required (see [Saga distributed transactions](https://docs.microsoft.com/en-us/azure/architecture/reference-architectures/saga/saga)). The scheduler system is bound to be the Sagas Orchestration component.
+The main reported drawback of Google Firebase is vendor Lock-In. More specifically it's reported that there are limitted ways to export data and few options that allow you to export data. This has been [partially addressed](https://firebase.google.com/docs/cli/auth) but it's better to be prepared. More specifically we use Firebase as presentation layer. Its databases are used as a form of caching, but the master dataset lives outside firebase, in a managed [PostgreSQL](https://cloud.google.com/sql/docs/postgres). To enable an extra level of decoupling, we use an Event Bus implemented using Cloud Pub/Sub. Modifications to the dataset are also replicated in the Event Bus and Firebase uses those events to update its internal databases and keep in sync. It also uses those updates to push notifications on the Web/App.
+
+![](images/GooglePresentationLayer.png)
+
+This architecture adds some complexity and a few milliseconds of latency on the time it takes for data modifications to reach the App. This is acceptable since those are infrequent compared to other operations e.g. menu search queries.
+
+The major benefit is that our business logic is fully encapsulated behind a REST API and the Event Bus. If we decide to migrate to another presentation layer architecture e.g. create apps that don't use Firebase we can migrate seamlessly without downtime. We can even develop incrementally and operate both fornt-ends in parallel till we have confidence in the transition.
+
+Since we still use Firebase databases, all the intelligence of the platform is available to us. This includes social login, notiffications infrastructure etc. The only key difference is that instead of writing dirrectly to Firebase's database, we do it through our API.
+
+### Lean Data
+
+In the Farmacy Food Architecture, there's state stored in various places on the SaaS platforms like Toast and ChefTec. To the extend possible, we don't replicate those data. For example ChefTec has vendor management and personel data. Unless we explicitly need those data, we don't replicate them in our Database. To the extend possible, if there's light use of some of those data, APIs will be used to retrieve the data we need in a timely manner. In cases where APIs are proved to be missing and/or are be slow, those are the only cases where explicit data duplication will be required.
 
 ![](images/global-state-synchronization.png)
 
-This will increase the complexity of the system and as such, it must be delayed as long as possible. A level of redundancy to business acceptable levels can be employed. For example 5% more meals can be prepared in order to offset mistakes from out-of sync state. Inevitably some customer interactions will be less than perfect because of that. State synchronization errors will manifest as errors on API calls. Alarm and monitoring provided by the GCP must be set-up properly to allow the developers and management to assess the types of errors that occur. All these problems will start happening at a certain level of traffic. We can delay spending development time addressing those issues unless there’s a certain level of success.
-
 Key takeaways:
 
-* Not having a data tier is an artifact of the massive development cost savings by employing SaaS services.
-* At a certain level caching or data duplication will be required. This will result in occasional failures.
-* Failures must be monitored. Those failures must be addressed at business level with great customer support.
-* When the scale of the success is such that certain types of failures become significant, fixing those will require explicit development effort. This will happen with focused projects that will pay for themselves in the form of savings and increased customer satisfaction. Those projects will likely require the collaboration of SaaS vendors who will be willing to help given that farmacy food is a significant revenue stream for them. If SaaS vendors aren’t responsive and prevent those errors from getting fixed, alternatives must be explored or the functionality might be re-implemented in house.
+* We have a lean data tier. This yields development cost savings as we employ APIs of SaaS services.
+* At a certain level caching or data duplication will be required.
+* If caching doesn't meet our performance requirements, e can collaborate with SaaS vendors who will be motivated to help given that farmacy food is a significant revenue stream for them. If SaaS vendors aren’t responsive and prevent those errors from getting fixed, alternatives must be explored or the functionality might be re-implemented in house.
 
-## VII. Milestones
+### ChefTec Integration
+
+We can't find a clear API on [ChefTec's website](https://www.cheftec.com/). Of course we can consider the Centralized Kitchen as an independent agent that has to be interfaced manually, but that would be a risk. It might introduce errors like lost orders, and degrade customer experience. It might also prove to be an operational bottleneck preventing the business from scaling to multiple kitchen locations.
+
+To mitigate those risks, we called ChefTec in the number they have for [Consultancy Services](https://www.cheftec.com/consultancy). We wanted to better understand what it takes to integrate with that system. They were very helpful. We explained to the front desk that we have a potential customer who is asking us to integrate ChefTec with a mobile App we're about to develop. They connected us to Patrick who was very helpful.
+
+He asked for the account, and advised that next time, it will be easier to get more specific answers if we have the customer call, or be on the call. The account name is important. We searched for Farmacy Food in Detroit but it was hard to find.
+
+We explained a little bit better that what we want is the app to be able to schedule orders for the day after. He called that "Schedule a Task" and they have done it many times. He explained that they have done many integrations in the past. One example is QuickBook, so that customers don't have to do double-entries for every order. If it's one they've done before, we might be able to have an dintegration very quickly and with relatively low cost (~$500). This is in line with all the data we see for integrations on the website. If it's a completely custom integration, it can be $5k+. It might also take 60+ days. It needs integration from both the App's side and ChefTec's side. He mentioned that everyone in the "inventory game" (industry), for some unknown reason, doesn't provide APIs.
+
+Bottom line, great call, great communication and clear next steps. We're confident we will be able to integrate and scale with a reasonable budget. It's also clear that they serve thousands of customers and they are very experienced.
+
+## VIII. Milestones
 
 ### Milestone 1. Marketing and Analytics
 * The existing Web and Mobile apps will be enhanced with Google Analytics
@@ -277,7 +337,7 @@ Key takeaways:
 * Otter delivery is integrated to enable enhanced delivery scheduling from the centralized kitchen
 * Multiple local kitchens on a trial-basis are supported
 
-## VIII. ADRs
+## IX. ADRs
 
 #### ADR 1. Hosting Platform
 Status: proposed
@@ -320,3 +380,15 @@ Consequences: The implementation is expected to scale elastically on demand. We 
 * Context: We need to engage customers with health education. This must be driven by business and must be mails with rich content including images.
 * Decision: [MailChimp](https://mailchimp.com/) is chosen as a customer communication platform on the basis of credibility, pricing and ease of use from non-technical users. For rich SMS interactions, [Twilio](https://www.twilio.com/messaging) will, where necessary, be used on the basis of credibility, reliability and affordability.
 * Consequences: The lists of Mailchimp must be synchronized with the rest of the system.
+
+#### ADR 8. Smart Fridge Access will be Controlled Both on Prem and via CDN
+* Status: Proposed
+* Context: The smart fridge must be available. We can't afford to have a customer who has the right to a meal be denied access to it, because of network or software unavailability.
+* Decision: We use a file-based solution. We use Google's CDN for file distribution. The fiile will adhere to all the secruity requirements and still will allow the Smart Fridge to operate reliable while offline for prolongued periods of time.
+* Consequences: A security audit of the protocol will have to be performed.
+
+#### ADR 9. Google Firebase will be used as Presentation Layer
+* Status: Proposed
+* Context: We want to be able to switch in a different front-end system easily. The switch might be movitvated by any reasons including financial or growth that is prevented by missing features. We shouldn't have to re-implement everything from scratch because the implementation is too tied-up to Google Firebase. This typically reflects on where data is stored and the way Apps use to access those data.
+* Decision: We hold the master dataset outside Google Firebase, in the [managed PostgreSQL](https://cloud.google.com/sql/docs/postgres). Firebease modifies it by using a REST API that abstract the core business logic. Dataset modifications are replicated to Firebase's datastore by using an Event Bus (Event Queue).
+* Consequences: Firebase and core business logic are completely decoupled. The implementation is more complex, but only where it matters. We can operate more than one front-end system e.g. to during a migration period. This abstraction also allows us to deliver push notification to customers by proxying a part of the Event Bus stream. Since we do use Firebase's datastore (although not as a master dataset), we have access to all the productivity features it provides. 
